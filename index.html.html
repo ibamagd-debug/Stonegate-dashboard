@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stonegate Bank – Compliance & Fraud Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #eef2f7; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 20px; }
+  .dashboard { background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.09); width: 100%; max-width: 1100px; overflow: hidden; }
+
+  /* HEADER */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid #e4e9f0; background: #fff; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { background: #1a4fa0; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 22px; height: 22px; }
+  .logo-name { font-size: 20px; font-weight: 700; color: #1a3a6b; }
+  .divider-v { width: 1px; height: 28px; background: #d0d8e8; }
+  .page-title { font-size: 17px; font-weight: 500; color: #334266; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .alert-btn { display: flex; align-items: center; gap: 7px; color: #334266; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .alert-btn svg { width: 20px; height: 20px; }
+  .user-info { display: flex; align-items: center; gap: 8px; color: #334266; font-size: 14px; font-weight: 500; }
+  .user-info svg { width: 20px; height: 20px; }
+  .user-name { color: #1a3a6b; font-weight: 600; }
+  .user-role { color: #7a8aaa; font-weight: 400; }
+
+  /* KPI */
+  .kpi-section { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; padding: 22px 28px; background: #f6f9fd; border-bottom: 1px solid #e4e9f0; }
+  .kpi-card { background: #fff; border-radius: 10px; padding: 22px 20px 18px; border: 1.5px solid #e4e9f0; display: flex; flex-direction: column; gap: 10px; min-height: 130px; }
+  .kpi-card.high-risk { border-color: #f5c6c6; background: #fff8f8; }
+  .kpi-card.under-review { border-color: #f3e3c3; background: #fffdf5; }
+  .kpi-card.closed { border-color: #c3e6d4; background: #f5fdf8; }
+  .kpi-label { font-size: 13px; font-weight: 600; color: #7a8aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 42px; font-weight: 700; color: #1a3a6b; line-height: 1; font-family: 'DM Mono', monospace; }
+  .kpi-card.high-risk .kpi-value { color: #d93025; }
+  .view-details-btn { display: inline-flex; align-items: center; gap: 6px; background: #1a4fa0; color: #fff; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; width: fit-content; font-family: 'DM Sans', sans-serif; }
+  .kpi-dropdown { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid #d0d8e8; border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 500; color: #334266; background: #fff; cursor: pointer; width: fit-content; }
+  .kpi-dropdown svg { width: 14px; height: 14px; }
+
+  /* SEARCH + FILTERS */
+  .search-bar-wrap { padding: 16px 28px 0; }
+  .search-bar { display: flex; align-items: center; gap: 10px; background: #f6f9fd; border: 1.5px solid #e4e9f0; border-radius: 8px; padding: 10px 16px; }
+  .search-bar svg { width: 18px; height: 18px; color: #7a8aaa; flex-shrink: 0; }
+  .search-bar input { border: none; background: transparent; font-size: 14px; font-family: 'DM Sans', sans-serif; color: #334266; width: 100%; outline: none; }
+  .search-bar input::placeholder { color: #aab4cc; }
+
+  .filters-section { display: flex; align-items: center; gap: 12px; padding: 14px 28px; border-bottom: 1px solid #e4e9f0; background: #fff; flex-wrap: wrap; }
+  .filter-wrap { position: relative; }
+  .filter-wrap select { border: 1.5px solid #d0d8e8; border-radius: 7px; padding: 9px 38px 9px 14px; font-size: 14px; font-weight: 500; color: #334266; background: #fff; cursor: pointer; min-width: 160px; font-family: 'DM Sans', sans-serif; appearance: none; -webkit-appearance: none; outline: none; }
+  .filter-wrap::after { content: ''; pointer-events: none; position: absolute; right: 13px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #7a8aaa; }
+  .filter-wrap select:focus { border-color: #1a4fa0; }
+  .apply-btn { background: #1a4fa0; color: #fff; font-size: 14px; font-weight: 600; padding: 9px 22px; border-radius: 7px; border: none; cursor: pointer; margin-left: auto; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+  .apply-btn:hover { background: #154088; }
+  .clear-btn { background: #fff; color: #d93025; font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: 7px; border: 1.5px solid #f5c6c6; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+  /* TABLE */
+  .table-section { padding: 0 28px 10px; }
+  .no-results { text-align: center; padding: 40px; color: #7a8aaa; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  thead tr { background: #1a4fa0; }
+  thead th { padding: 13px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #fff; letter-spacing: 0.3px; white-space: nowrap; }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child { border-radius: 0 8px 0 0; }
+  tbody tr { border-bottom: 1px dashed #e4e9f0; transition: background 0.1s; }
+  tbody tr:hover { background: #f0f5ff; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 13px 14px; font-size: 14px; color: #2d3a55; vertical-align: middle; }
+  .case-id { color: #1a4fa0; font-weight: 600; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .amount { font-family: 'DM Mono', monospace; font-size: 13.5px; font-weight: 500; }
+  .badge { display: inline-block; padding: 4px 14px; border-radius: 5px; font-size: 12.5px; font-weight: 600; }
+  .badge-high { background: #d93025; color: #fff; }
+  .badge-medium { background: #f5e8c8; color: #8a6200; border: 1px solid #e8cc84; }
+  .badge-low { background: #e8edf5; color: #5a6a8a; border: 1px solid #c8d4e8; }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 5px; font-size: 12.5px; font-weight: 600; }
+  .status-under-review { background: #fff3cd; color: #7a5800; border: 1px solid #f0d060; }
+  .status-open { color: #334266; }
+  .status-closed { color: #16a34a; }
+  .status-escalated { color: #d93025; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-red { background: #d93025; }
+  .dot-blue { background: #2563eb; }
+  .dot-green { background: #16a34a; }
+  .dot-amber { background: #f59e0b; }
+
+  /* PAGINATION */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 18px 28px 22px; }
+  .page-btn { border: 1.5px solid #d0d8e8; background: #fff; color: #334266; font-size: 13.5px; font-weight: 500; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.12s; }
+  .page-btn:hover { background: #f0f4fa; border-color: #1a4fa0; color: #1a4fa0; }
+  .page-btn.active { background: #1a4fa0; color: #fff; border-color: #1a4fa0; }
+  .page-btn.nav { font-size: 12.5px; font-weight: 600; color: #1a4fa0; border-color: #1a4fa0; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .results-count { padding: 0 28px 10px; font-size: 13px; color: #7a8aaa; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,30,60,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden; animation: slideUp 0.2s ease; }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { background: #1a4fa0; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h2 { color: #fff; font-size: 17px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .modal-close { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .modal-body { padding: 24px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .modal-field { display: flex; flex-direction: column; gap: 4px; }
+  .modal-field label { font-size: 11px; font-weight: 600; color: #7a8aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+  .modal-field span { font-size: 15px; font-weight: 600; color: #1a3a6b; }
+  .modal-field.full { grid-column: 1 / -1; }
+  .modal-divider { height: 1px; background: #e4e9f0; margin: 16px 0; }
+  .modal-footer { padding: 16px 24px; background: #f6f9fd; border-top: 1px solid #e4e9f0; display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-secondary { background: #fff; border: 1.5px solid #d0d8e8; color: #334266; font-size: 13.5px; font-weight: 600; padding: 8px 18px; border-radius: 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-primary { background: #1a4fa0; border: none; color: #fff; font-size: 13.5px; font-weight: 600; padding: 8px 18px; border-radius: 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .modal-risk { font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 5px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 4L21 9.5" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="5" y="10" width="3" height="8" fill="white" rx="0.5"/><rect x="10.5" y="10" width="3" height="8" fill="white" rx="0.5"/><rect x="16" y="10" width="3" height="8" fill="white" rx="0.5"/><path d="M2 18H22" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <span class="logo-name">Stonegate Bank</span>
+      </div>
+      <div class="divider-v"></div>
+      <span class="page-title">Compliance &amp; Fraud Dashboard</span>
+    </div>
+    <div class="header-right">
+      <div class="alert-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alerts
+      </div>
+      <div class="divider-v"></div>
+      <div class="user-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span><span class="user-name">John Smith</span> <span class="user-role">| Compliance Officer</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-section">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Alerts Today</div>
+      <div class="kpi-value">128</div>
+    </div>
+    <div class="kpi-card high-risk">
+      <div class="kpi-label">High-Risk Cases</div>
+      <div class="kpi-value">34</div>
+      <button class="view-details-btn" onclick="filterByRisk('High')">View Details &nbsp;›</button>
+    </div>
+    <div class="kpi-card under-review">
+      <div class="kpi-label">Under Review</div>
+      <div class="kpi-value">16</div>
+      <div class="kpi-dropdown">In Progress <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="kpi-card closed">
+      <div class="kpi-label">Closed Cases</div>
+      <div class="kpi-value">54</div>
+      <div class="kpi-dropdown">Resolved <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar-wrap">
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by customer name, case ID, or amount..." oninput="applyFilters()">
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters-section">
+    <div class="filter-wrap">
+      <select id="dateFilter" onchange="applyFilters()">
+        <option value="">Date Range</option>
+        <option value="02/18/2024">02/18/2024</option>
+        <option value="02/17/2024">02/17/2024</option>
+        <option value="02/16/2024">02/16/2024</option>
+        <option value="02/15/2024">02/15/2024</option>
+        <option value="02/14/2024">02/14/2024</option>
+        <option value="02/13/2024">02/13/2024</option>
+        <option value="02/12/2024">02/12/2024</option>
+      </select>
+    </div>
+    <div class="filter-wrap">
+      <select id="riskFilter" onchange="applyFilters()">
+        <option value="">Risk Level</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+    <div class="filter-wrap">
+      <select id="statusFilter" onchange="applyFilters()">
+        <option value="">Status</option>
+        <option value="Under Review">Under Review</option>
+        <option value="Open">Open</option>
+        <option value="Closed">Closed</option>
+        <option value="Escalated">Escalated</option>
+      </select>
+    </div>
+    <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-section">
+    <table id="caseTable">
+      <thead>
+        <tr>
+          <th>Case ID</th>
+          <th>Customer Name</th>
+          <th>Transaction Amount</th>
+          <th>Risk Score</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div class="no-results" id="noResults" style="display:none;">No cases match your filters.</div>
+  </div>
+  <div class="results-count" id="resultsCount"></div>
+
+  <!-- PAGINATION -->
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalCaseId">Case Details</h2>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field"><label>Customer Name</label><span id="mName">—</span></div>
+        <div class="modal-field"><label>Case ID</label><span id="mId" style="font-family:'DM Mono',monospace;">—</span></div>
+        <div class="modal-field"><label>Transaction Amount</label><span id="mAmount" style="font-family:'DM Mono',monospace;">—</span></div>
+        <div class="modal-field"><label>Date</label><span id="mDate">—</span></div>
+        <div class="modal-field"><label>Risk Score</label><span id="mRisk">—</span></div>
+        <div class="modal-field"><label>Status</label><span id="mStatus">—</span></div>
+        <div class="modal-field full"><label>Account Type</label><span id="mAccount">—</span></div>
+        <div class="modal-field full"><label>Flag Reason</label><span id="mReason">—</span></div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Assigned Officer</label><span id="mOfficer">—</span></div>
+        <div class="modal-field"><label>Branch</label><span id="mBranch">—</span></div>
+        <div class="modal-field full"><label>Notes</label><span id="mNotes" style="font-weight:400;font-size:14px;color:#5a6a8a;">—</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModalDirect()">Close</button>
+      <button class="btn-primary">Escalate Case</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALL_CASES = [
+  { id:'C12345', name:'Jane Doe',       amount:'$5,200',  risk:'High',   status:'Under Review', date:'02/18/2024', account:'Savings Account',   reason:'Unusual transaction pattern detected outside normal hours', officer:'John Smith',   branch:'Manchester Central', notes:'Customer contacted. Awaiting callback for verification.' },
+  { id:'C12346', name:'Mark Johnson',   amount:'$12,000', risk:'Medium', status:'Open',         date:'02/17/2024', account:'Business Account',   reason:'Large transfer to new payee exceeding threshold',          officer:'Sarah Lee',    branch:'London Bridge',      notes:'Initial review pending. No contact made yet.' },
+  { id:'C12347', name:'Susan Lee',      amount:'$500',    risk:'Low',    status:'Closed',       date:'02/16/2024', account:'Current Account',    reason:'Multiple small transactions flagged by system',            officer:'Tom Harris',   branch:'Birmingham West',    notes:'Verified as legitimate. Case closed.' },
+  { id:'C12348', name:'Robert Adams',   amount:'$8,750',  risk:'High',   status:'Escalated',    date:'02/16/2024', account:'Investment Account', reason:'Cross-border transfer to high-risk jurisdiction',          officer:'John Smith',   branch:'Manchester Central', notes:'Escalated to senior compliance team for review.' },
+  { id:'C12349', name:'Linda Smith',    amount:'$3,100',  risk:'Medium', status:'Open',         date:'02/14/2024', account:'Current Account',    reason:'Card transaction in foreign currency flagged',             officer:'Sarah Lee',    branch:'Leeds North',        notes:'Awaiting customer documentation.' },
+  { id:'C12350', name:'David Brown',    amount:'$22,500', risk:'High',   status:'Under Review', date:'02/14/2024', account:'Business Account',   reason:'Structuring pattern detected over 5 days',                officer:'Tom Harris',   branch:'London Bridge',      notes:'Transaction history requested from bank.' },
+  { id:'C12351', name:'Emily Clarke',   amount:'$750',    risk:'Low',    status:'Closed',       date:'02/13/2024', account:'Savings Account',    reason:'Duplicate payment flagged',                               officer:'John Smith',   branch:'Birmingham West',    notes:'Duplicate confirmed and refunded. Closed.' },
+  { id:'C12352', name:'James Wilson',   amount:'$4,300',  risk:'Medium', status:'Open',         date:'02/13/2024', account:'Current Account',    reason:'Unusual login location during transaction',               officer:'Sarah Lee',    branch:'Manchester Central', notes:'IP address flagged. Security team notified.' },
+  { id:'C12353', name:'Olivia Turner',  amount:'$18,000', risk:'High',   status:'Escalated',    date:'02/12/2024', account:'Investment Account', reason:'Rapid movement of funds across multiple accounts',         officer:'Tom Harris',   branch:'Leeds North',        notes:'Under investigation by fraud team.' },
+  { id:'C12354', name:'Michael Scott',  amount:'$1,200',  risk:'Low',    status:'Closed',       date:'02/12/2024', account:'Current Account',    reason:'Minor anomaly in spending pattern',                       officer:'John Smith',   branch:'London Bridge',      notes:'No fraud detected. Case closed.' },
+  { id:'C12355', name:'Hannah Green',   amount:'$9,600',  risk:'High',   status:'Under Review', date:'02/11/2024', account:'Business Account',   reason:'Cash deposits below reporting threshold suspected',        officer:'Sarah Lee',    branch:'Birmingham West',    notes:'AML team reviewing transaction history.' },
+  { id:'C12356', name:'Chris Evans',    amount:'$2,800',  risk:'Medium', status:'Open',         date:'02/11/2024', account:'Savings Account',    reason:'Beneficiary account recently created',                    officer:'Tom Harris',   branch:'Manchester Central', notes:'Beneficiary details under verification.' },
+  { id:'C12357', name:'Sophie Adams',   amount:'$6,400',  risk:'High',   status:'Escalated',    date:'02/10/2024', account:'Investment Account', reason:'Wire transfer to sanctioned country flagged',              officer:'John Smith',   branch:'Leeds North',        notes:'Referred to compliance director.' },
+  { id:'C12358', name:'Daniel Lee',     amount:'$330',    risk:'Low',    status:'Closed',       date:'02/10/2024', account:'Current Account',    reason:'Flagged by automated rules - low confidence',             officer:'Sarah Lee',    branch:'London Bridge',      notes:'False positive. No action required.' },
+  { id:'C12359', name:'Rachel Moore',   amount:'$14,750', risk:'High',   status:'Under Review', date:'02/09/2024', account:'Business Account',   reason:'Third party payments inconsistent with business type',     officer:'Tom Harris',   branch:'Birmingham West',    notes:'Business profile review initiated.' },
+  { id:'C12360', name:'Tom Baker',      amount:'$5,900',  risk:'Medium', status:'Open',         date:'02/09/2024', account:'Current Account',    reason:'Multiple failed authentication attempts before transfer',  officer:'John Smith',   branch:'Manchester Central', notes:'Security team investigating access logs.' },
+  { id:'C12361', name:'Laura King',     amount:'$800',    risk:'Low',    status:'Closed',       date:'02/08/2024', account:'Savings Account',    reason:'Minor system flag on dormant account activity',           officer:'Sarah Lee',    branch:'Leeds North',        notes:'Customer confirmed activity. Case closed.' },
+  { id:'C12362', name:'Nathan Fox',     amount:'$31,000', risk:'High',   status:'Escalated',    date:'02/08/2024', account:'Investment Account', reason:'Funds from unknown offshore entity detected',             officer:'Tom Harris',   branch:'London Bridge',      notes:'Pending response from international compliance unit.' },
+  { id:'C12363', name:'Amy White',      amount:'$2,100',  risk:'Medium', status:'Open',         date:'02/07/2024', account:'Current Account',    reason:'Irregular payment schedule to same beneficiary',          officer:'John Smith',   branch:'Birmingham West',    notes:'Pattern analysis underway.' },
+  { id:'C12364', name:'George Hall',    amount:'$470',    risk:'Low',    status:'Closed',       date:'02/07/2024', account:'Savings Account',    reason:'Low-risk flag cleared after review',                      officer:'Sarah Lee',    branch:'Manchester Central', notes:'Cleared. No further action.' },
+];
+
+const ROWS_PER_PAGE = 6;
+let currentPage = 1;
+let filteredCases = [...ALL_CASES];
+
+function getBadgeHTML(risk) {
+  const cls = risk === 'High' ? 'badge-high' : risk === 'Medium' ? 'badge-medium' : 'badge-low';
+  return `<span class="badge ${cls}">${risk}</span>`;
+}
+
+function getStatusHTML(status) {
+  if (status === 'Under Review') return `<span class="status-pill status-under-review">Under Review</span>`;
+  if (status === 'Closed') return `<span style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#16a34a;"><span class="dot dot-green"></span> Closed</span>`;
+  if (status === 'Escalated') return `<span style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#d93025;"><span class="dot dot-red"></span> Escalated</span>`;
+  return `<span style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#2563eb;"><span class="dot dot-blue"></span> Open</span>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const noResults = document.getElementById('noResults');
+  const table = document.getElementById('caseTable');
+  const count = document.getElementById('resultsCount');
+
+  const start = (currentPage - 1) * ROWS_PER_PAGE;
+  const pageData = filteredCases.slice(start, start + ROWS_PER_PAGE);
+
+  if (filteredCases.length === 0) {
+    tbody.innerHTML = '';
+    table.style.display = 'none';
+    noResults.style.display = 'block';
+    count.textContent = '';
+  } else {
+    table.style.display = '';
+    noResults.style.display = 'none';
+    count.textContent = `Showing ${start + 1}–${Math.min(start + ROWS_PER_PAGE, filteredCases.length)} of ${filteredCases.length} cases`;
+    tbody.innerHTML = pageData.map(c => `
+      <tr onclick="openModal('${c.id}')">
+        <td><span class="case-id">${c.id}</span></td>
+        <td>${c.name}</td>
+        <td class="amount">${c.amount}</td>
+        <td>${getBadgeHTML(c.risk)}</td>
+        <td>${getStatusHTML(c.status)}</td>
+        <td>${c.date}</td>
+      </tr>
+    `).join('');
+  }
+  renderPagination();
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(filteredCases.length / ROWS_PER_PAGE);
+  const pg = document.getElementById('pagination');
+  if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn nav" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&laquo; Previous</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn nav" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next &raquo;</button>`;
+  pg.innerHTML = html;
+}
+
+function goPage(p) {
+  const totalPages = Math.ceil(filteredCases.length / ROWS_PER_PAGE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderTable();
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const risk = document.getElementById('riskFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  const date = document.getElementById('dateFilter').value;
+
+  filteredCases = ALL_CASES.filter(c => {
+    const matchSearch = !search || c.name.toLowerCase().includes(search) || c.id.toLowerCase().includes(search) || c.amount.includes(search);
+    const matchRisk = !risk || c.risk === risk;
+    const matchStatus = !status || c.status === status;
+    const matchDate = !date || c.date === date;
+    return matchSearch && matchRisk && matchStatus && matchDate;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('riskFilter').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('dateFilter').value = '';
+  filteredCases = [...ALL_CASES];
+  currentPage = 1;
+  renderTable();
+}
+
+function filterByRisk(risk) {
+  document.getElementById('riskFilter').value = risk;
+  applyFilters();
+}
+
+function openModal(id) {
+  const c = ALL_CASES.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modalCaseId').textContent = c.id;
+  document.getElementById('mName').textContent = c.name;
+  document.getElementById('mId').textContent = c.id;
+  document.getElementById('mAmount').textContent = c.amount;
+  document.getElementById('mDate').textContent = c.date;
+  document.getElementById('mAccount').textContent = c.account;
+  document.getElementById('mReason').textContent = c.reason;
+  document.getElementById('mOfficer').textContent = c.officer;
+  document.getElementById('mBranch').textContent = c.branch;
+  document.getElementById('mNotes').textContent = c.notes;
+
+  const riskEl = document.getElementById('mRisk');
+  riskEl.innerHTML = getBadgeHTML(c.risk);
+  document.getElementById('mStatus').innerHTML = getStatusHTML(c.status);
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// Init
+renderTable();
+</script>
+</body>
+</html>
